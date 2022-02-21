@@ -1,6 +1,6 @@
 # Migration Generator
 
-Migration Generator which used to generatie migrations from an existing table structure for Hyperf.
+Migration Generator which used to generate migrations from an existing table structure for Hyperf.
 
 ```
 composer require hyperf/migration-generator-incubator --dev
