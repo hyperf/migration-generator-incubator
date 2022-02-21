@@ -12,10 +12,19 @@ declare(strict_types=1);
 namespace Hyperf\MigrationGenerator\Command;
 
 use Hyperf\Command\Command as HyperfCommand;
+use Hyperf\Context\Context;
 use Hyperf\Contract\ConfigInterface;
 use Hyperf\Database\Commands\ModelOption;
 use Hyperf\Database\ConnectionResolverInterface;
 use Hyperf\Database\Schema\Builder;
+use Hyperf\Database\Schema\Column;
+use Hyperf\MigrationGenerator\CreateMigrationVisitor;
+use Hyperf\Utils\Collection;
+use PhpParser\NodeTraverser;
+use PhpParser\Parser;
+use PhpParser\ParserFactory;
+use PhpParser\PrettyPrinter\Standard;
+use PhpParser\PrettyPrinterAbstract;
 use Psr\Container\ContainerInterface;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputOption;
@@ -25,6 +34,10 @@ class GenerateMigrationCommand extends HyperfCommand
     protected ?ConnectionResolverInterface $resolver = null;
 
     protected ?ConfigInterface $config = null;
+
+    protected ?Parser $astParser = null;
+
+    protected ?PrettyPrinterAbstract $printer = null;
 
     public function __construct(protected ContainerInterface $container)
     {
@@ -48,6 +61,8 @@ class GenerateMigrationCommand extends HyperfCommand
 
         $this->resolver = $this->container->get(ConnectionResolverInterface::class);
         $this->config = $this->container->get(ConfigInterface::class);
+        $this->astParser = (new ParserFactory())->create(ParserFactory::ONLY_PHP7);
+        $this->printer = new Standard();
 
         $option = tap(new ModelOption(), static function (ModelOption $option) use ($pool, $path) {
             $option->setPool($pool);
@@ -61,9 +76,48 @@ class GenerateMigrationCommand extends HyperfCommand
         }
     }
 
+    public function getColumns(ModelOption $option, ?string $table = null): Collection
+    {
+        $pool = $option->getPool();
+        $columns = Context::getOrSet('database.columns.' . $pool, function () use ($pool) {
+            $builder = $this->getSchemaBuilder($pool);
+            return $builder->getColumns();
+        });
+
+        if ($table) {
+            return collect($columns)->filter(static function (Column $column) use ($table) {
+                return $column->getTable() === $table;
+            })->sort(static function (Column $a, Column $b) {
+                return $a->getPosition() - $b->getPosition();
+            });
+        }
+
+        return collect($columns);
+    }
+
     public function createMigration(string $table, ModelOption $option)
     {
-        var_dump($table);
+        $stub = __DIR__ . '/../../stubs/create_from_database.stub.php';
+        if (! file_exists($stub)) {
+            if (! defined('BASE_PATH')) {
+                throw new \InvalidArgumentException('Please set constant `BASE_PATH`.');
+            }
+            $stub = BASE_PATH . '/vendor/migration-generator-incubator/stubs/create_from_database.stub.php';
+            if (! file_exists($stub)) {
+                throw new \InvalidArgumentException('create_from_database.stub does not exists.');
+            }
+        }
+
+        $columns = $this->getColumns($option, $table);
+        $code = file_get_contents($stub);
+        $stmts = $this->astParser->parse($code);
+
+        $traverser = new NodeTraverser();
+        $traverser->addVisitor(new CreateMigrationVisitor($table, $option, $columns));
+        $stmts = $traverser->traverse($stmts);
+        $code = $this->printer->prettyPrintFile($stmts);
+        var_dump($code);
+        exit;
     }
 
     public function createMigrations(ModelOption $option)
