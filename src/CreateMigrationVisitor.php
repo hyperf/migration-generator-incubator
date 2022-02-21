@@ -13,6 +13,7 @@ namespace Hyperf\MigrationGenerator;
 
 use Hyperf\Database\Commands\ModelOption;
 use Hyperf\Database\Schema\Column;
+use Hyperf\Utils\CodeGen\PhpParser;
 use Hyperf\Utils\Collection;
 use Hyperf\Utils\Str;
 use PhpParser\Node;
@@ -74,13 +75,25 @@ class CreateMigrationVisitor extends NodeVisitorAbstract
 
     private function createStmtFromColumn(Column $column)
     {
-        var_dump($column->getPosition());
+        var_dump($column->getType());
+        $type = match ($column->getType()){
+            'bigint' => 'bigInteger',
+            'int' => 'integer',
+            'varchar' => 'string',
+        };
+        $autoIncrement = $column->getPosition() === 1;
+        $unsigned = $column->getPosition() === 1;
         return new Node\Stmt\Expression(
             new Node\Expr\MethodCall(
                 new Node\Expr\Variable('table'),
-                new Node\Identifier('bigIncrements'),
+                new Node\Identifier('addColumn'),
                 [
-                    new Node\Arg(new Node\Scalar\String_('id')),
+                    new Node\Arg(new Node\Scalar\String_($type)),
+                    new Node\Arg(new Node\Scalar\String_($column->getName())),
+                    PhpParser::getInstance()->getExprFromValue([
+                        'autoIncrement' => $autoIncrement,
+                        'unsigned' => $unsigned,
+                    ])
                 ]
             )
         );
