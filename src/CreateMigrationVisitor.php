@@ -73,29 +73,53 @@ class CreateMigrationVisitor extends NodeVisitorAbstract
         return $nodes;
     }
 
-    private function createStmtFromColumn(Column $column)
+    private function createMethodCall(Column $column): Node\Expr\MethodCall
     {
         var_dump($column->getType());
-        $type = match ($column->getType()){
+        $type = match ($column->getType()) {
             'bigint' => 'bigInteger',
             'int' => 'integer',
+            'tinyint' => 'tinyInteger',
             'varchar' => 'string',
+            'datetime' => 'dateTime'
         };
         $autoIncrement = $column->getPosition() === 1;
         $unsigned = $column->getPosition() === 1;
-        return new Node\Stmt\Expression(
-            new Node\Expr\MethodCall(
-                new Node\Expr\Variable('table'),
-                new Node\Identifier('addColumn'),
-                [
-                    new Node\Arg(new Node\Scalar\String_($type)),
-                    new Node\Arg(new Node\Scalar\String_($column->getName())),
-                    PhpParser::getInstance()->getExprFromValue([
-                        'autoIncrement' => $autoIncrement,
-                        'unsigned' => $unsigned,
-                    ])
-                ]
-            )
+        // ->comment('主键')
+        return new Node\Expr\MethodCall(
+            new Node\Expr\Variable('table'),
+            new Node\Identifier('addColumn'),
+            [
+                new Node\Arg(new Node\Scalar\String_($type)),
+                new Node\Arg(new Node\Scalar\String_($column->getName())),
+                PhpParser::getInstance()->getExprFromValue([
+                    'autoIncrement' => $autoIncrement,
+                    'unsigned' => $unsigned,
+                ]),
+            ]
         );
+    }
+
+    private function createMethodCallFromComment(Node\Expr $expr, Column $column)
+    {
+        if ($column->getComment()) {
+            return new Node\Expr\MethodCall(
+                $expr,
+                new Node\Identifier('comment'),
+                [
+                    new Node\Arg(new Node\Scalar\String_($column->getComment())),
+                ]
+            );
+        }
+
+        return $expr;
+    }
+
+    private function createStmtFromColumn(Column $column)
+    {
+        $expr = $this->createMethodCall($column);
+        $expr = $this->createMethodCallFromComment($expr, $column);
+
+        return new Node\Stmt\Expression($expr);
     }
 }
