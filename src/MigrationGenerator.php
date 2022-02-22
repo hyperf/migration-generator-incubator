@@ -148,10 +148,10 @@ class MigrationGenerator
         }
     }
 
-    public function line($string, $style = null, $verbosity = null)
+    public function line($string, $style = null)
     {
         $styled = $style ? "<{$style}>{$string}</{$style}>" : $string;
-        $this->output->writeln($styled);
+        $this->output?->writeln($styled);
     }
 
     protected function isIgnoreTable(string $table, ModelOption $option): bool
