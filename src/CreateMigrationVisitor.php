@@ -9,7 +9,6 @@ declare(strict_types=1);
  * @contact  group@hyperf.io
  * @license  https://github.com/hyperf/hyperf/blob/master/LICENSE
  */
-
 namespace Hyperf\MigrationGenerator;
 
 use Hyperf\Database\Commands\ModelOption;
@@ -104,10 +103,10 @@ class CreateMigrationVisitor extends NodeVisitorAbstract
         };
         $extra = [];
         if ($type === 'string') {
-            $extra = [ 'length' => $this->columnArray['NUMERIC_PRECISION']];
+            $extra = ['length' => $this->columnArray['NUMERIC_PRECISION']];
         }
-        if ( $type === 'decimal' ) {
-            $extra = [ 'total' => $this->columnArray['NUMERIC_PRECISION'], 'places' => $this->columnArray['NUMERIC_SCALE']];
+        if ($type === 'decimal') {
+            $extra = ['total' => $this->columnArray['NUMERIC_PRECISION'], 'places' => $this->columnArray['NUMERIC_SCALE']];
         }
         $autoIncrement = $column->getPosition() === 1;
         $unsigned = $column->getPosition() === 1;
