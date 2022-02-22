@@ -9,7 +9,6 @@ declare(strict_types=1);
  * @contact  group@hyperf.io
  * @license  https://github.com/hyperf/hyperf/blob/master/LICENSE
  */
-
 namespace Hyperf\MigrationGenerator\Command;
 
 use Hyperf\Command\Command as HyperfCommand;
@@ -86,10 +85,10 @@ class GenerateMigrationCommand extends HyperfCommand
         }
     }
 
-    public function getColumnArray(ModelOption $option, ?string $table = null):array
+    public function getColumnArray(ModelOption $option, ?string $table = null): array
     {
-        $query = Db::select('select * from information_schema.columns where `table_name` = ? order by ORDINAL_POSITION', [ $table ]);
-        foreach ( $query as $item ) {
+        $query = Db::select('select * from information_schema.columns where `table_name` = ? order by ORDINAL_POSITION', [$table]);
+        foreach ($query as $item) {
             return (array) $item;
         }
     }
@@ -115,14 +114,14 @@ class GenerateMigrationCommand extends HyperfCommand
 
     public function createMigration(string $table, ModelOption $option)
     {
-        if (!defined('BASE_PATH')) {
+        if (! defined('BASE_PATH')) {
             throw new \InvalidArgumentException('Please set constant `BASE_PATH`.');
         }
 
         $stub = __DIR__ . '/../../stubs/create_from_database.stub.php';
-        if (!file_exists($stub)) {
+        if (! file_exists($stub)) {
             $stub = BASE_PATH . '/vendor/migration-generator-incubator/stubs/create_from_database.stub.php';
-            if (!file_exists($stub)) {
+            if (! file_exists($stub)) {
                 throw new \InvalidArgumentException('create_from_database.stub does not exists.');
             }
         }
@@ -138,7 +137,7 @@ class GenerateMigrationCommand extends HyperfCommand
         $code = $this->printer->prettyPrintFile($stmts);
 
         $path = BASE_PATH . '/' . $option->getPath();
-        if (!file_exists($path)) {
+        if (! file_exists($path)) {
             mkdir($path, 0755, true);
         }
 
@@ -158,9 +157,9 @@ class GenerateMigrationCommand extends HyperfCommand
         $tables = [];
 
         foreach ($builder->getAllTables() as $row) {
-            $row = (array)$row;
+            $row = (array) $row;
             $table = reset($row);
-            if (!$this->isIgnoreTable($table, $option)) {
+            if (! $this->isIgnoreTable($table, $option)) {
                 $tables[] = $table;
             }
         }
