@@ -36,10 +36,9 @@ class MigrationGenerator
 
     public function __construct(
         protected ConnectionResolverInterface $resolver,
-        protected ConfigInterface             $config,
-        protected ?OutputInterface            $output = null,
-    )
-    {
+        protected ConfigInterface $config,
+        protected ?OutputInterface $output = null,
+    ) {
         $this->astParser = (new ParserFactory())->create(ParserFactory::ONLY_PHP7);
         $this->printer = new Standard();
         $this->files = make(Filesystem::class);
@@ -150,6 +149,12 @@ class MigrationGenerator
         }
     }
 
+    public function line($string, $style = null, $verbosity = null)
+    {
+        $styled = $style ? "<{$style}>{$string}</{$style}>" : $string;
+        $this->output->writeln($styled, $this->parseVerbosity($verbosity));
+    }
+
     protected function isIgnoreTable(string $table, ModelOption $option): bool
     {
         if (in_array($table, $option->getIgnoreTables())) {
@@ -179,11 +184,5 @@ class MigrationGenerator
     protected function getDatePrefix(): string
     {
         return date('Y_m_d_His');
-    }
-
-    public function line($string, $style = null, $verbosity = null)
-    {
-        $styled = $style ? "<{$style}>{$string}</{$style}>" : $string;
-        $this->output->writeln($styled, $this->parseVerbosity($verbosity));
     }
 }
