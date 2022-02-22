@@ -103,12 +103,12 @@ class CreateMigrationVisitor extends NodeVisitorAbstract
         );
     }
 
-    private function createMethodCallFromNullable ( Node\Expr $expr, Column $column )
+    private function createMethodCallFromNullable(Node\Expr $expr, Column $column)
     {
-        if ( $column->isNullable() ) {
+        if ($column->isNullable()) {
             return new Node\Expr\MethodCall(
                 $expr,
-                 new Node\Identifier('nullable')
+                new Node\Identifier('nullable')
             );
         }
 
