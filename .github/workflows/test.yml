@@ -13,7 +13,7 @@ jobs:
     strategy:
       matrix:
         os: [ ubuntu-latest ]
-        php-version: [ '7.3', '7.4', '8.0' ]
+        php-version: [ '8.0' ]
         engine: [ 'none', 'swoole', 'swow' ]
         exclude:
           - php-version: '7.3'
@@ -61,6 +61,9 @@ jobs:
           sudo make install
           sudo sh -c "echo extension=swow > /etc/php/${{ matrix.php-version }}/cli/conf.d/swow.ini"
           php --ri swow
+      - name: Setup MySQL ...
+        run: |
+          docker run -e TZ=Asia/Shanghai -e MYSQL_ALLOW_EMPTY_PASSWORD=true -e MYSQL_ROOT_HOST=% -e MYSQL_DATABASE=hyperf -v $PWD/.github/init.sql:/docker-entrypoint-initdb.d/init.sql -d -p 3306:3306 --name mysql mysql/mysql-server:5.7
       - name: Setup Packages
         run: composer update -o --no-scripts
       - name: Run Test Cases

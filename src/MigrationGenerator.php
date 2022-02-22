@@ -9,16 +9,14 @@ declare(strict_types=1);
  * @contact  group@hyperf.io
  * @license  https://github.com/hyperf/hyperf/blob/master/LICENSE
  */
-namespace Hyperf\MigrationGenerator\Command;
+namespace Hyperf\MigrationGenerator;
 
-use Hyperf\Command\Command as HyperfCommand;
 use Hyperf\Context\Context;
 use Hyperf\Contract\ConfigInterface;
 use Hyperf\Database\Commands\ModelOption;
 use Hyperf\Database\ConnectionResolverInterface;
 use Hyperf\Database\Schema\Builder;
 use Hyperf\Database\Schema\Column;
-use Hyperf\MigrationGenerator\CreateMigrationVisitor;
 use Hyperf\Utils\Collection;
 use Hyperf\Utils\Filesystem\Filesystem;
 use PhpParser\NodeTraverser;
@@ -26,48 +24,29 @@ use PhpParser\Parser;
 use PhpParser\ParserFactory;
 use PhpParser\PrettyPrinter\Standard;
 use PhpParser\PrettyPrinterAbstract;
-use Psr\Container\ContainerInterface;
-use Symfony\Component\Console\Input\InputArgument;
-use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Output\OutputInterface;
 
-class GenerateMigrationCommand extends HyperfCommand
+class MigrationGenerator
 {
-    protected ?ConnectionResolverInterface $resolver = null;
+    protected Parser $astParser;
 
-    protected ?ConfigInterface $config = null;
+    protected PrettyPrinterAbstract $printer;
 
-    protected ?Parser $astParser = null;
+    protected Filesystem $files;
 
-    protected ?PrettyPrinterAbstract $printer = null;
-
-    protected ?Filesystem $files = null;
-
-    public function __construct(protected ContainerInterface $container)
+    public function __construct(
+        protected ConnectionResolverInterface $resolver,
+        protected ConfigInterface             $config,
+        protected ?OutputInterface            $output = null,
+    )
     {
-        parent::__construct('gen:migration-from-database');
-    }
-
-    public function configure()
-    {
-        parent::configure();
-        $this->setDescription('Generate migrations from an existing table structure');
-        $this->addArgument('table', InputArgument::OPTIONAL, 'Which table you want generated.');
-        $this->addOption('pool', 'p', InputOption::VALUE_OPTIONAL, 'The connection pool you want the migration to be generated.', 'default');
-        $this->addOption('path', null, InputOption::VALUE_OPTIONAL, 'The path that you want the migration to be generated.', 'migrations');
-    }
-
-    public function handle()
-    {
-        $table = $this->input->getArgument('table');
-        $pool = $this->input->getOption('pool');
-        $path = $this->input->getOption('path');
-
-        $this->resolver = $this->container->get(ConnectionResolverInterface::class);
-        $this->config = $this->container->get(ConfigInterface::class);
         $this->astParser = (new ParserFactory())->create(ParserFactory::ONLY_PHP7);
         $this->printer = new Standard();
         $this->files = make(Filesystem::class);
+    }
 
+    public function generate(string $pool, string $path, ?string $table)
+    {
         $option = tap(new ModelOption(), static function (ModelOption $option) use ($pool, $path) {
             $option->setPool($pool);
             $option->setPath($path);
@@ -150,7 +129,7 @@ class GenerateMigrationCommand extends HyperfCommand
 
         $file = pathinfo($path, PATHINFO_FILENAME);
 
-        $this->info("<info>[INFO] Created Migration:</info> {$file}");
+        $this->line("<info>[INFO] Created Migration:</info> {$file}", 'info');
     }
 
     public function createMigrations(ModelOption $option)
@@ -200,5 +179,11 @@ class GenerateMigrationCommand extends HyperfCommand
     protected function getDatePrefix(): string
     {
         return date('Y_m_d_His');
+    }
+
+    public function line($string, $style = null, $verbosity = null)
+    {
+        $styled = $style ? "<{$style}>{$string}</{$style}>" : $string;
+        $this->output->writeln($styled, $this->parseVerbosity($verbosity));
     }
 }
