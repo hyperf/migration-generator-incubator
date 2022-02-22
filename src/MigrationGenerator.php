@@ -9,7 +9,6 @@ declare(strict_types=1);
  * @contact  group@hyperf.io
  * @license  https://github.com/hyperf/hyperf/blob/master/LICENSE
  */
-
 namespace Hyperf\MigrationGenerator;
 
 use Hyperf\Context\Context;
@@ -37,10 +36,9 @@ class MigrationGenerator
 
     public function __construct(
         protected ConnectionResolverInterface $resolver,
-        protected ConfigInterface             $config,
-        protected ?OutputInterface            $output = null,
-    )
-    {
+        protected ConfigInterface $config,
+        protected ?OutputInterface $output = null,
+    ) {
         $this->astParser = (new ParserFactory())->create(ParserFactory::ONLY_PHP7);
         $this->printer = new Standard();
         $this->files = make(Filesystem::class);
@@ -65,11 +63,11 @@ class MigrationGenerator
         $connection = $this->resolver->connection($option->getPool());
         $query = $connection->select('select * from information_schema.columns where `table_schema` = ? and `table_name` = ? order by ORDINAL_POSITION', [
             $database ?? $this->config->get('databases.' . $option->getPool() . '.database'),
-            $table
+            $table,
         ]);
         $result = [];
         foreach ($query as $item) {
-            $result[] = array_change_key_case((array)$item, CASE_LOWER);
+            $result[] = array_change_key_case((array) $item, CASE_LOWER);
         }
         return $result;
     }
@@ -95,14 +93,14 @@ class MigrationGenerator
 
     public function createMigration(string $table, ModelOption $option)
     {
-        if (!defined('BASE_PATH')) {
+        if (! defined('BASE_PATH')) {
             throw new \InvalidArgumentException('Please set constant `BASE_PATH`.');
         }
 
         $stub = __DIR__ . '/../stubs/create_from_database.stub.php';
-        if (!file_exists($stub)) {
+        if (! file_exists($stub)) {
             $stub = BASE_PATH . '/vendor/migration-generator-incubator/stubs/create_from_database.stub.php';
-            if (!file_exists($stub)) {
+            if (! file_exists($stub)) {
                 throw new \InvalidArgumentException('create_from_database.stub does not exists.');
             }
         }
@@ -118,7 +116,7 @@ class MigrationGenerator
         $code = $this->printer->prettyPrintFile($stmts);
 
         $path = BASE_PATH . '/' . $option->getPath();
-        if (!file_exists($path)) {
+        if (! file_exists($path)) {
             mkdir($path, 0755, true);
         }
 
@@ -138,9 +136,9 @@ class MigrationGenerator
         $tables = [];
 
         foreach ($builder->getAllTables() as $row) {
-            $row = (array)$row;
+            $row = (array) $row;
             $table = reset($row);
-            if (!$this->isIgnoreTable($table, $option)) {
+            if (! $this->isIgnoreTable($table, $option)) {
                 $tables[] = $table;
             }
         }
