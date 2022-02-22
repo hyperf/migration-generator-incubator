@@ -89,6 +89,17 @@ class CreateMigrationVisitor extends NodeVisitorAbstract
         return $nodes;
     }
 
+    private function getColumnItem(string $name): array
+    {
+        foreach ($this->columnArray as $item) {
+            if ($item['column_name'] === $name) {
+                return $item;
+            }
+        }
+
+        throw new \InvalidArgumentException('The name of column does not exist.');
+    }
+
     private function createMethodCall(Column $column): Node\Expr\MethodCall
     {
         $type = match ($column->getType()) {
@@ -102,14 +113,20 @@ class CreateMigrationVisitor extends NodeVisitorAbstract
             'timestamp' => 'timestamp',
         };
         $extra = [];
+        $columnItem = $this->getColumnItem($column->getName());
+        if ($columnItem['extra'] === 'auto_increment') {
+            $extra['autoIncrement'] = true;
+        }
+        if (str_contains($columnItem['column_type'], 'unsigned')) {
+            $extra['unsigned'] = true;
+        }
         if ($type === 'string') {
-            $extra = ['length' => $this->columnArray['NUMERIC_PRECISION']];
+            $extra['length'] = $columnItem['character_maximum_length'];
         }
         if ($type === 'decimal') {
-            $extra = ['total' => $this->columnArray['NUMERIC_PRECISION'], 'places' => $this->columnArray['NUMERIC_SCALE']];
+            $extra['total'] = $columnItem['numeric_precision'];
+            $extra['places'] = $columnItem['numeric_scale'];
         }
-        $autoIncrement = $column->getPosition() === 1;
-        $unsigned = $column->getPosition() === 1;
         // ->comment('主键')
         return new Node\Expr\MethodCall(
             new Node\Expr\Variable('table'),
