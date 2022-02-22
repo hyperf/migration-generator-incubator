@@ -51,21 +51,20 @@ class MigrationGenerator
             $option->setPath($path);
         });
 
-        try {
-            if ($table) {
-                $this->createMigration($table, $option);
-            } else {
-                $this->createMigrations($option);
-            }
-        } catch (\Throwable $e) {
-            $this->error("<error>[ERROR] Created Migration:</error> {$e->getMessage()}");
+        if ($table) {
+            $this->createMigration($table, $option);
+        } else {
+            $this->createMigrations($option);
         }
     }
 
-    public function getColumnArray(ModelOption $option, ?string $table = null): array
+    public function getColumnArray(ModelOption $option, ?string $table = null, ?string $database = null): array
     {
         $connection = $this->resolver->connection($option->getPool());
-        $query = $connection->select('select * from information_schema.columns where `table_name` = ? order by ORDINAL_POSITION', [$table]);
+        $query = $connection->select('select * from information_schema.columns where `table_schema` = ? and `table_name` = ? order by ORDINAL_POSITION', [
+            $database ?? $this->config->get('databases.' . $option->getPool() . '.database'),
+            $table,
+        ]);
         $result = [];
         foreach ($query as $item) {
             $result[] = array_change_key_case((array) $item, CASE_LOWER);
@@ -98,7 +97,7 @@ class MigrationGenerator
             throw new \InvalidArgumentException('Please set constant `BASE_PATH`.');
         }
 
-        $stub = __DIR__ . '/../../stubs/create_from_database.stub.php';
+        $stub = __DIR__ . '/../stubs/create_from_database.stub.php';
         if (! file_exists($stub)) {
             $stub = BASE_PATH . '/vendor/migration-generator-incubator/stubs/create_from_database.stub.php';
             if (! file_exists($stub)) {
@@ -152,7 +151,7 @@ class MigrationGenerator
     public function line($string, $style = null, $verbosity = null)
     {
         $styled = $style ? "<{$style}>{$string}</{$style}>" : $string;
-        $this->output->writeln($styled, $this->parseVerbosity($verbosity));
+        $this->output->writeln($styled);
     }
 
     protected function isIgnoreTable(string $table, ModelOption $option): bool
