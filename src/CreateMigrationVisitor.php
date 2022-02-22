@@ -127,7 +127,6 @@ class CreateMigrationVisitor extends NodeVisitorAbstract
             $extra['total'] = $columnItem['numeric_precision'];
             $extra['places'] = $columnItem['numeric_scale'];
         }
-        // ->comment('主键')
         return new Node\Expr\MethodCall(
             new Node\Expr\Variable('table'),
             new Node\Identifier('addColumn'),
