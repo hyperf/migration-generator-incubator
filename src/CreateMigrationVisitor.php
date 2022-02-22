@@ -76,8 +76,6 @@ class CreateMigrationVisitor extends NodeVisitorAbstract
 
     private function createMethodCall(Column $column): Node\Expr\MethodCall
     {
-        var_dump($column->getType());
-        var_dump($column);
         $type = match ($column->getType()) {
             'bigint' => 'bigInteger',
             'int' => 'integer',
@@ -103,6 +101,18 @@ class CreateMigrationVisitor extends NodeVisitorAbstract
                 ]),
             ]
         );
+    }
+
+    private function createMethodCallFromNullable ( Node\Expr $expr, Column $column )
+    {
+        if ( $column->isNullable() ) {
+            return new Node\Expr\MethodCall(
+                $expr,
+                 new Node\Identifier('nullable')
+            );
+        }
+
+        return $expr;
     }
 
     private function createMethodCallFromDefault(Node\Expr $expr, Column $column)
@@ -138,6 +148,7 @@ class CreateMigrationVisitor extends NodeVisitorAbstract
     private function createStmtFromColumn(Column $column)
     {
         $expr = $this->createMethodCall($column);
+        $expr = $this->createMethodCallFromNullable($expr, $column);
         $expr = $this->createMethodCallFromDefault($expr, $column);
         $expr = $this->createMethodCallFromComment($expr, $column);
 

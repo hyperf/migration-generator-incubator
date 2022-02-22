@@ -21,7 +21,7 @@ class DummyClass extends Migration
     public function up(): void
     {
         Schema::create('DummyTable', function (Blueprint $table) {
-            $table->bigIncrements('id')->default();
+            $table->bigIncrements('id');
             $table->timestamps();
         });
     }
