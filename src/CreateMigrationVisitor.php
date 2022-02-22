@@ -9,7 +9,6 @@ declare(strict_types=1);
  * @contact  group@hyperf.io
  * @license  https://github.com/hyperf/hyperf/blob/master/LICENSE
  */
-
 namespace Hyperf\MigrationGenerator;
 
 use Hyperf\Database\Commands\ModelOption;
@@ -65,8 +64,24 @@ class CreateMigrationVisitor extends NodeVisitorAbstract
                         ),
                     ],
                 ]);
+                $downStmt = new Node\Stmt\ClassMethod('down', [
+                    'returnType' => new Node\Identifier('void'),
+                    'flags' => Node\Stmt\Class_::MODIFIER_PUBLIC | Node\Stmt\Class_::MODIFIER_FINAL,
+                    'stmts' => [
+                        new Node\Stmt\Expression(
+                            new Node\Expr\StaticCall(
+                                new Node\Name('Schema'),
+                                new Node\Identifier('dropIfExists'),
+                                [
+                                    new Node\Arg(new Node\Scalar\String_($this->table)),
+                                ]
+                            )
+                        ),
+                    ],
+                ]);
                 $class->stmts = [
                     $upStmt,
+                    $downStmt,
                 ];
             }
         }
@@ -95,10 +110,10 @@ class CreateMigrationVisitor extends NodeVisitorAbstract
             [
                 new Node\Arg(new Node\Scalar\String_($type)),
                 new Node\Arg(new Node\Scalar\String_($column->getName())),
-                PhpParser::getInstance()->getExprFromValue([
-                    'autoIncrement' => $autoIncrement,
-                    'unsigned' => $unsigned,
-                ]),
+                //                PhpParser::getInstance()->getExprFromValue([
+                //                    'autoIncrement' => $autoIncrement,
+                //                    'unsigned' => $unsigned,
+                //                ]),
             ]
         );
     }
