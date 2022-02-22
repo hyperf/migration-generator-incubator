@@ -88,9 +88,11 @@ class GenerateMigrationCommand extends HyperfCommand
     public function getColumnArray(ModelOption $option, ?string $table = null): array
     {
         $query = Db::select('select * from information_schema.columns where `table_name` = ? order by ORDINAL_POSITION', [$table]);
+        $result = [];
         foreach ($query as $item) {
-            return (array) $item;
+            $result[] = array_change_key_case((array) $item, CASE_LOWER);
         }
+        return $result;
     }
 
     public function getColumns(ModelOption $option, ?string $table = null): Collection
