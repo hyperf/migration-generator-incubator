@@ -9,6 +9,7 @@ declare(strict_types=1);
  * @contact  group@hyperf.io
  * @license  https://github.com/hyperf/hyperf/blob/master/LICENSE
  */
+
 namespace Hyperf\MigrationGenerator;
 
 use Hyperf\Database\Commands\ModelOption;
@@ -24,7 +25,7 @@ class CreateMigrationVisitor extends NodeVisitorAbstract
     /**
      * @param Collection<int, Column> $columns
      */
-    public function __construct(private string $table, private ModelOption $option, private Collection $columns)
+    public function __construct(private string $table, private ModelOption $option, private Collection $columns, private array $columnArray)
     {
     }
 
@@ -101,6 +102,13 @@ class CreateMigrationVisitor extends NodeVisitorAbstract
             'date' => 'date',
             'timestamp' => 'timestamp',
         };
+        $extra = [];
+        if ($type === 'string') {
+            $extra = [ 'length' => $this->columnArray['NUMERIC_PRECISION']];
+        }
+        if ( $type === 'decimal' ) {
+            $extra = [ 'total' => $this->columnArray['NUMERIC_PRECISION'], 'places' => $this->columnArray['NUMERIC_SCALE']];
+        }
         $autoIncrement = $column->getPosition() === 1;
         $unsigned = $column->getPosition() === 1;
         // ->comment('主键')
@@ -110,10 +118,7 @@ class CreateMigrationVisitor extends NodeVisitorAbstract
             [
                 new Node\Arg(new Node\Scalar\String_($type)),
                 new Node\Arg(new Node\Scalar\String_($column->getName())),
-                //                PhpParser::getInstance()->getExprFromValue([
-                //                    'autoIncrement' => $autoIncrement,
-                //                    'unsigned' => $unsigned,
-                //                ]),
+                PhpParser::getInstance()->getExprFromValue($extra),
             ]
         );
     }
