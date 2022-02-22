@@ -9,6 +9,7 @@ declare(strict_types=1);
  * @contact  group@hyperf.io
  * @license  https://github.com/hyperf/hyperf/blob/master/LICENSE
  */
+
 namespace Hyperf\MigrationGenerator;
 
 use Hyperf\Database\Commands\ModelOption;
@@ -76,12 +77,16 @@ class CreateMigrationVisitor extends NodeVisitorAbstract
     private function createMethodCall(Column $column): Node\Expr\MethodCall
     {
         var_dump($column->getType());
+        var_dump($column);
         $type = match ($column->getType()) {
             'bigint' => 'bigInteger',
             'int' => 'integer',
             'tinyint' => 'tinyInteger',
             'varchar' => 'string',
-            'datetime' => 'dateTime'
+            'datetime' => 'dateTime',
+            'decimal' => 'decimal',
+            'date' => 'date',
+            'timestamp' => 'timestamp',
         };
         $autoIncrement = $column->getPosition() === 1;
         $unsigned = $column->getPosition() === 1;
@@ -98,6 +103,21 @@ class CreateMigrationVisitor extends NodeVisitorAbstract
                 ]),
             ]
         );
+    }
+
+    private function createMethodCallFromDefault(Node\Expr $expr, Column $column)
+    {
+        if ($column->getDefault() !== null) {
+            return new Node\Expr\MethodCall(
+                $expr,
+                new Node\Identifier('default'),
+                [
+                    new Node\Arg(new Node\Scalar\String_($column->getDefault())),
+                ]
+            );
+        }
+
+        return $expr;
     }
 
     private function createMethodCallFromComment(Node\Expr $expr, Column $column)
@@ -118,6 +138,7 @@ class CreateMigrationVisitor extends NodeVisitorAbstract
     private function createStmtFromColumn(Column $column)
     {
         $expr = $this->createMethodCall($column);
+        $expr = $this->createMethodCallFromDefault($expr, $column);
         $expr = $this->createMethodCallFromComment($expr, $column);
 
         return new Node\Stmt\Expression($expr);
