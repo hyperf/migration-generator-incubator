@@ -111,6 +111,7 @@ class CreateMigrationVisitor extends NodeVisitorAbstract
             'decimal' => 'decimal',
             'date' => 'date',
             'timestamp' => 'timestamp',
+            'json' => 'json',
         };
         $extra = [];
         $columnItem = $this->getColumnItem($column->getName());
