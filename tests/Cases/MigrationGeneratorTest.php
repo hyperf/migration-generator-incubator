@@ -33,7 +33,7 @@ class MigrationGeneratorTest extends AbstractTestCase
         $this->assertNotEmpty($code);
     }
 
-    public function testGenerateIndex()
+    public function testGenerateIndexes()
     {
         $generator = $this->getGenerator();
 
@@ -45,6 +45,18 @@ class MigrationGeneratorTest extends AbstractTestCase
         $this->assertStringNotContainsString('primary', $code);
         $this->assertStringContainsString("\$table->index(['user_id'], 'INDEX_USER_ID');", $code);
         $this->assertStringContainsString("\$table->unique(['role_id', 'user_id'], 'INDEX_ROLE_ID');", $code);
+    }
+
+    public function testGenerateComment()
+    {
+        $generator = $this->getGenerator();
+
+        $generator->generate('default', __DIR__, 'user');
+
+        $code = array_shift(ContainerStub::$codes);
+
+        $this->assertNotEmpty($code);
+        $this->assertStringContainsString("\$table->comment('用户表');", $code);
     }
 
     protected function getGenerator(): MigrationGenerator

@@ -62,8 +62,21 @@ class MigrationGenerator
     {
         $columns = $this->getColumnArray($option, $table, $database);
         $indexes = $this->getIndexes($option, $table, $database);
+        $comment = $this->getComment($option, $table);
 
-        return new TableData($columns, $indexes);
+        return new TableData($columns, $indexes, $comment);
+    }
+
+    public function getComment(ModelOption $option, ?string $table = null): string
+    {
+        // SHOW TABLE STATUS LIKE 'acl_role';
+        $connection = $this->resolver->connection($option->getPool());
+        $result = $connection->select(sprintf(
+            'SHOW TABLE STATUS LIKE `%s`;',
+            $table
+        ));
+        $result = array_change_key_case((array) $result[0], CASE_LOWER);
+        return $result['comment'];
     }
 
     public function getIndexes(ModelOption $option, ?string $table = null, ?string $database = null): array
