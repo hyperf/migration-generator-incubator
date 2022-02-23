@@ -13,7 +13,7 @@ namespace Hyperf\MigrationGenerator;
 
 final class TableData
 {
-    public function __construct(protected array $columns, protected array $indexes)
+    public function __construct(protected array $columns, protected array $indexes, protected string $comment)
     {
     }
 
@@ -44,5 +44,10 @@ final class TableData
     public function getIndexes(): array
     {
         return $this->indexes;
+    }
+
+    public function getComment(): string
+    {
+        return $this->comment;
     }
 }

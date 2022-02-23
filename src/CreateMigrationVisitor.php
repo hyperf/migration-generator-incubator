@@ -62,7 +62,11 @@ class CreateMigrationVisitor extends NodeVisitorAbstract
                                                 $result[] = $this->createStmtFromColumn($column);
                                             }
 
-                                            return array_merge($result, $this->createStmtFromIndexes($isAutoIncrement));
+                                            return array_merge(
+                                                $result,
+                                                $this->createStmtFromIndexes($isAutoIncrement),
+                                                $this->createStmtFromComment()
+                                            );
                                         }),
                                     ])),
                                 ]
@@ -207,6 +211,23 @@ class CreateMigrationVisitor extends NodeVisitorAbstract
         return new Node\Stmt\Expression($expr);
     }
 
+    private function createStmtFromComment()
+    {
+        $comment = $this->tableData->getComment();
+        if (! $comment) {
+            return [];
+        }
+        return [
+            new Node\Stmt\Expression(new Node\Expr\MethodCall(
+                new Node\Expr\Variable('table'),
+                new Node\Identifier('comment'),
+                [
+                    new Node\Arg(new Node\Scalar\String_($comment)),
+                ]
+            )),
+        ];
+    }
+
     private function createStmtFromIndexes(bool $isAutoIncrement)
     {
         $indexes = [];
@@ -236,10 +257,15 @@ class CreateMigrationVisitor extends NodeVisitorAbstract
             $result[] = new Node\Stmt\Expression(new Node\Expr\MethodCall(
                 new Node\Expr\Variable('table'),
                 new Node\Identifier($method),
-                [
-                    PhpParser::getInstance()->getExprFromValue($columns),
-                    new Node\Arg(new Node\Scalar\String_($keyName)),
-                ]
+                value(static function () use ($columns, $keyName) {
+                    $result = [
+                        PhpParser::getInstance()->getExprFromValue($columns),
+                    ];
+                    if ($keyName !== 'PRIMARY') {
+                        $result[] = new Node\Arg(new Node\Scalar\String_($keyName));
+                    }
+                    return $result;
+                })
             ));
         }
 

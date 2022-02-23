@@ -61,7 +61,7 @@ CREATE TABLE `user` (
   `created_at` datetime DEFAULT NULL,
   `updated_at` datetime DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户表';
 
 INSERT INTO `user` (`id`, `name`, `gender`, `created_at`, `updated_at`)
 VALUES
@@ -99,7 +99,7 @@ CREATE TABLE `user_role` (
   PRIMARY KEY (`id`),
   KEY `INDEX_USER_ID` (`user_id`),
   UNIQUE KEY `INDEX_ROLE_ID` (`role_id`, `user_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户角色关系表';
 
 INSERT INTO `user_role` (`id`, `user_id`, `role_id`, `created_at`, `updated_at`)
 VALUES
