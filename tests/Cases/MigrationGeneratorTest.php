@@ -42,9 +42,9 @@ class MigrationGeneratorTest extends AbstractTestCase
         $code = array_shift(ContainerStub::$codes);
 
         $this->assertNotEmpty($code);
-        $this->assertContains('PRIMARY KEY (`id`)', $code);
-        $this->assertContains('KEY `INDEX_USER_ID` (`user_id`)', $code);
-        $this->assertContains('UNIQUE KEY `INDEX_ROLE_ID` (`role_id`, `user_id`)` (`user_id`)', $code);
+        $this->assertStringNotContainsString('primary', $code);
+        $this->assertStringContainsString("\$table->index(['user_id'], 'INDEX_USER_ID')", $code);
+        $this->assertStringContainsString("\$table->unique(['role_id', 'user_id'], 'INDEX_ROLE_ID')", $code);
     }
 
     protected function getGenerator(): MigrationGenerator
