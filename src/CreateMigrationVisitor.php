@@ -233,14 +233,14 @@ class CreateMigrationVisitor extends NodeVisitorAbstract
 
             $columns = array_column($index, 'column_name');
 
-            $result[] = new Node\Expr\MethodCall(
+            $result[] = new Node\Stmt\Expression(new Node\Expr\MethodCall(
                 new Node\Expr\Variable('table'),
                 new Node\Identifier($method),
                 [
                     PhpParser::getInstance()->getExprFromValue($columns),
                     new Node\Arg(new Node\Scalar\String_($keyName)),
                 ]
-            );
+            ));
         }
 
         return $result;
