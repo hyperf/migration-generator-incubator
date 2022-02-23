@@ -22,7 +22,7 @@ use HyperfTest\ContainerStub;
  */
 class MigrationGeneratorTest extends AbstractTestCase
 {
-    public function testGenerateInteger()
+    public function testGenerateDefault()
     {
         $generator = $this->getGenerator();
 
@@ -31,6 +31,20 @@ class MigrationGeneratorTest extends AbstractTestCase
         $code = array_shift(ContainerStub::$codes);
 
         $this->assertNotEmpty($code);
+    }
+
+    public function testGenerateIndex()
+    {
+        $generator = $this->getGenerator();
+
+        $generator->generate('default', __DIR__, 'user_role');
+
+        $code = array_shift(ContainerStub::$codes);
+
+        $this->assertNotEmpty($code);
+        $this->assertContains('PRIMARY KEY (`id`)', $code);
+        $this->assertContains('KEY `INDEX_USER_ID` (`user_id`)', $code);
+        $this->assertContains('UNIQUE KEY `INDEX_ROLE_ID` (`role_id`, `user_id`)` (`user_id`)', $code);
     }
 
     protected function getGenerator(): MigrationGenerator

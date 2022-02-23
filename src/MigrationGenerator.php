@@ -58,6 +58,30 @@ class MigrationGenerator
         }
     }
 
+    public function getTableData(ModelOption $option, ?string $table = null, ?string $database = null): TableData
+    {
+        $columns = $this->getColumnArray($option, $table, $database);
+        $indexes = $this->getIndexes($option, $table, $database);
+
+        return new TableData($columns, $indexes);
+    }
+
+    public function getIndexes(ModelOption $option, ?string $table = null, ?string $database = null): array
+    {
+        $connection = $this->resolver->connection($option->getPool());
+        $query = $connection->select(sprintf(
+            'SHOW INDEX FROM `%s`.`%s`;',
+            $database ?? $this->config->get('databases.' . $option->getPool() . '.database'),
+            $table
+        ));
+
+        $result = [];
+        foreach ($query as $item) {
+            $result[] = array_change_key_case((array) $item, CASE_LOWER);
+        }
+        return $result;
+    }
+
     public function getColumnArray(ModelOption $option, ?string $table = null, ?string $database = null): array
     {
         $connection = $this->resolver->connection($option->getPool());
@@ -106,12 +130,13 @@ class MigrationGenerator
         }
 
         $columns = $this->getColumns($option, $table);
-        $columnArray = $this->getColumnArray($option, $table);
+        $tableData = $this->getTableData($option, $table);
+
         $code = file_get_contents($stub);
         $stmts = $this->astParser->parse($code);
 
         $traverser = new NodeTraverser();
-        $traverser->addVisitor(new CreateMigrationVisitor($table, $option, $columns, $columnArray));
+        $traverser->addVisitor(new CreateMigrationVisitor($table, $option, $columns, $tableData));
         $stmts = $traverser->traverse($stmts);
         $code = $this->printer->prettyPrintFile($stmts);
 

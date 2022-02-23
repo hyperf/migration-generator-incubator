@@ -24,7 +24,7 @@ class CreateMigrationVisitor extends NodeVisitorAbstract
     /**
      * @param Collection<int, Column> $columns
      */
-    public function __construct(private string $table, private ModelOption $option, private Collection $columns, private array $columnArray)
+    public function __construct(private string $table, private ModelOption $option, private Collection $columns, private TableData $tableData)
     {
     }
 
@@ -53,10 +53,16 @@ class CreateMigrationVisitor extends NodeVisitorAbstract
                                         ],
                                         'stmts' => value(function () {
                                             $result = [];
+                                            $isAutoIncrement = false;
                                             foreach ($this->columns as $column) {
+                                                if (! $isAutoIncrement) {
+                                                    $isAutoIncrement = $this->isAutoIncrement($column);
+                                                }
+
                                                 $result[] = $this->createStmtFromColumn($column);
                                             }
-                                            return $result;
+
+                                            return array_merge($result, $this->createStmtFromIndexes($isAutoIncrement));
                                         }),
                                     ])),
                                 ]
@@ -91,13 +97,23 @@ class CreateMigrationVisitor extends NodeVisitorAbstract
 
     private function getColumnItem(string $name): array
     {
-        foreach ($this->columnArray as $item) {
+        foreach ($this->tableData->getColumns() as $item) {
             if ($item['column_name'] === $name) {
                 return $item;
             }
         }
 
         throw new \InvalidArgumentException('The name of column does not exist.');
+    }
+
+    private function isAutoIncrement(Column $column): bool
+    {
+        $columnItem = $this->getColumnItem($column->getName());
+        if ($columnItem['extra'] === 'auto_increment') {
+            return true;
+        }
+
+        return false;
     }
 
     private function createMethodCall(Column $column): Node\Expr\MethodCall
@@ -115,7 +131,7 @@ class CreateMigrationVisitor extends NodeVisitorAbstract
         };
         $extra = [];
         $columnItem = $this->getColumnItem($column->getName());
-        if ($columnItem['extra'] === 'auto_increment') {
+        if ($this->isAutoIncrement($column)) {
             $extra['autoIncrement'] = true;
         }
         if (str_contains($columnItem['column_type'], 'unsigned')) {
@@ -189,5 +205,44 @@ class CreateMigrationVisitor extends NodeVisitorAbstract
         $expr = $this->createMethodCallFromComment($expr, $column);
 
         return new Node\Stmt\Expression($expr);
+    }
+
+    private function createStmtFromIndexes(bool $isAutoIncrement)
+    {
+        $indexes = [];
+        foreach ($this->tableData->getIndexes() as $index) {
+            $indexes[$index['key_name']][] = $index;
+        }
+
+        $result = [];
+        foreach ($indexes as $keyName => $index) {
+            if ($isAutoIncrement && $keyName === 'PRIMARY') {
+                continue;
+            }
+
+            $isUnique = $index[0]['non_unique'] === 0;
+            $isPrimary = $keyName === 'PRIMARY';
+
+            if ($isPrimary) {
+                $method = 'primary';
+            } elseif ($isUnique) {
+                $method = 'unique';
+            } else {
+                $method = 'index';
+            }
+
+            $columns = array_column($index, 'column_name');
+
+            $result[] = new Node\Expr\MethodCall(
+                new Node\Expr\Variable('table'),
+                new Node\Identifier($method),
+                [
+                    PhpParser::getInstance()->getExprFromValue($columns),
+                    new Node\Arg(new Node\Scalar\String_($keyName)),
+                ]
+            );
+        }
+
+        return $result;
     }
 }
