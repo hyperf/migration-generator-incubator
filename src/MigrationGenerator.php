@@ -72,7 +72,7 @@ class MigrationGenerator
         // SHOW TABLE STATUS LIKE 'acl_role';
         $connection = $this->resolver->connection($option->getPool());
         $result = $connection->select(sprintf(
-            'SHOW TABLE STATUS LIKE `%s`;',
+            'SHOW TABLE STATUS LIKE "%s";',
             $table
         ));
         $result = array_change_key_case((array) $result[0], CASE_LOWER);
