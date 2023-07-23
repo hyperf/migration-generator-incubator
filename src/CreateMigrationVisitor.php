@@ -11,14 +11,16 @@ declare(strict_types=1);
  */
 namespace Hyperf\MigrationGenerator;
 
+use Hyperf\CodeParser\PhpParser;
+use Hyperf\Collection\Collection;
 use Hyperf\Database\Commands\ModelOption;
 use Hyperf\Database\Schema\Column;
-use Hyperf\Utils\CodeGen\PhpParser;
-use Hyperf\Utils\Collection;
-use Hyperf\Utils\Str;
+use Hyperf\Stringable\Str;
 use InvalidArgumentException;
 use PhpParser\Node;
 use PhpParser\NodeVisitorAbstract;
+
+use function Hyperf\Support\value;
 
 class CreateMigrationVisitor extends NodeVisitorAbstract
 {
@@ -133,6 +135,7 @@ class CreateMigrationVisitor extends NodeVisitorAbstract
             'date' => 'date',
             'timestamp' => 'timestamp',
             'json' => 'json',
+            default => throw new InvalidArgumentException("The type of {$column->getType()} cannot be supported."),
         };
         $extra = [];
         $columnItem = $this->getColumnItem($column->getName());

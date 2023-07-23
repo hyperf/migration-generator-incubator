@@ -28,6 +28,7 @@
         "hyperf/di": "^3.0",
         "mockery/mockery": "^1.0",
         "phpstan/phpstan": "^1.0",
+        "phpstan/phpstan-deprecation-rules": "^1.1",
         "phpunit/phpunit": "^9.5",
         "swoole/ide-helper": "^4.5"
     },

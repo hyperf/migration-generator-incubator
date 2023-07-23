@@ -11,14 +11,14 @@ declare(strict_types=1);
  */
 namespace Hyperf\MigrationGenerator;
 
+use Hyperf\Collection\Collection;
 use Hyperf\Context\Context;
 use Hyperf\Contract\ConfigInterface;
 use Hyperf\Database\Commands\ModelOption;
 use Hyperf\Database\ConnectionResolverInterface;
 use Hyperf\Database\Schema\Builder;
 use Hyperf\Database\Schema\Column;
-use Hyperf\Utils\Collection;
-use Hyperf\Utils\Filesystem\Filesystem;
+use Hyperf\Support\Filesystem\Filesystem;
 use InvalidArgumentException;
 use PhpParser\NodeTraverser;
 use PhpParser\Parser;
@@ -26,6 +26,10 @@ use PhpParser\ParserFactory;
 use PhpParser\PrettyPrinter\Standard;
 use PhpParser\PrettyPrinterAbstract;
 use Symfony\Component\Console\Output\OutputInterface;
+
+use function Hyperf\Collection\collect;
+use function Hyperf\Support\make;
+use function Hyperf\Tappable\tap;
 
 class MigrationGenerator
 {
