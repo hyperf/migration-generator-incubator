@@ -2,6 +2,8 @@
 
 Migration Generator which used to generate migrations from an existing table structure for Hyperf.
 
+[migration-generator](https://github.com/hyperf/migration-generator)
+
 ## How to install
 
 ```
