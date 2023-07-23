@@ -135,6 +135,8 @@ class CreateMigrationVisitor extends NodeVisitorAbstract
             'date' => 'date',
             'timestamp' => 'timestamp',
             'json' => 'json',
+            'float' => 'float',
+            'text' => 'text',
             default => throw new InvalidArgumentException("The type of {$column->getType()} cannot be supported."),
         };
         $extra = [];
@@ -148,7 +150,7 @@ class CreateMigrationVisitor extends NodeVisitorAbstract
         if ($type === 'string') {
             $extra['length'] = $columnItem['character_maximum_length'];
         }
-        if ($type === 'decimal') {
+        if ($type === 'decimal' || $type === 'float') {
             $extra['total'] = $columnItem['numeric_precision'];
             $extra['places'] = $columnItem['numeric_scale'];
         }
