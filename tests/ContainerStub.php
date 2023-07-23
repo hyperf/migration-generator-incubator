@@ -12,14 +12,14 @@ declare(strict_types=1);
 namespace HyperfTest;
 
 use Hyperf\Config\Config;
+use Hyperf\Context\ApplicationContext;
 use Hyperf\Contract\ConfigInterface;
 use Hyperf\Database\ConnectionResolver;
 use Hyperf\Database\ConnectionResolverInterface;
 use Hyperf\Database\Connectors\ConnectionFactory;
 use Hyperf\Database\Connectors\MySqlConnector;
 use Hyperf\Di\Container;
-use Hyperf\Utils\ApplicationContext;
-use Hyperf\Utils\Filesystem\Filesystem;
+use Hyperf\Support\Filesystem\Filesystem;
 use Mockery;
 
 class ContainerStub
