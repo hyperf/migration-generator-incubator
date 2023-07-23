@@ -19,6 +19,7 @@ use Hyperf\Database\Schema\Builder;
 use Hyperf\Database\Schema\Column;
 use Hyperf\Utils\Collection;
 use Hyperf\Utils\Filesystem\Filesystem;
+use InvalidArgumentException;
 use PhpParser\NodeTraverser;
 use PhpParser\Parser;
 use PhpParser\ParserFactory;
@@ -131,14 +132,14 @@ class MigrationGenerator
     public function createMigration(string $table, ModelOption $option)
     {
         if (! defined('BASE_PATH')) {
-            throw new \InvalidArgumentException('Please set constant `BASE_PATH`.');
+            throw new InvalidArgumentException('Please set constant `BASE_PATH`.');
         }
 
         $stub = __DIR__ . '/../stubs/create_from_database.stub.php';
         if (! file_exists($stub)) {
             $stub = BASE_PATH . '/vendor/migration-generator-incubator/stubs/create_from_database.stub.php';
             if (! file_exists($stub)) {
-                throw new \InvalidArgumentException('create_from_database.stub does not exists.');
+                throw new InvalidArgumentException('create_from_database.stub does not exists.');
             }
         }
 

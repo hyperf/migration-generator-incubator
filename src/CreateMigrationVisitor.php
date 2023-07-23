@@ -16,6 +16,7 @@ use Hyperf\Database\Schema\Column;
 use Hyperf\Utils\CodeGen\PhpParser;
 use Hyperf\Utils\Collection;
 use Hyperf\Utils\Str;
+use InvalidArgumentException;
 use PhpParser\Node;
 use PhpParser\NodeVisitorAbstract;
 
@@ -107,7 +108,7 @@ class CreateMigrationVisitor extends NodeVisitorAbstract
             }
         }
 
-        throw new \InvalidArgumentException('The name of column does not exist.');
+        throw new InvalidArgumentException('The name of column does not exist.');
     }
 
     private function isAutoIncrement(Column $column): bool

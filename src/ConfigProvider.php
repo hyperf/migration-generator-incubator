@@ -18,17 +18,8 @@ class ConfigProvider
     public function __invoke(): array
     {
         return [
-            'dependencies' => [
-            ],
             'commands' => [
                 GenerateMigrationCommand::class,
-            ],
-            'annotations' => [
-                'scan' => [
-                    'paths' => [
-                        __DIR__,
-                    ],
-                ],
             ],
         ];
     }

@@ -21,6 +21,7 @@ use PhpParser\PrettyPrinterAbstract;
 use Psr\Container\ContainerInterface;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputOption;
+use Throwable;
 
 class GenerateMigrationCommand extends HyperfCommand
 {
@@ -65,7 +66,7 @@ class GenerateMigrationCommand extends HyperfCommand
             );
 
             $generator->generate($pool, $path, $table);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->error("<error>[ERROR] Created Migration:</error> {$e->getMessage()}");
         }
     }
